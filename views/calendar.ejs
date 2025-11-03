@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Kalendarz</title>
+    <link rel="stylesheet" href="/css/tailwind.css" />
+    <style>.countdown-box{backdrop-filter:blur(8px)}</style>
+  </head>
+  <body class="min-h-screen bg-slate-900 text-white p-4">
+    <header class="flex items-center justify-between mb-4 gap-2">
+      <div>
+        <h1 class="text-xl font-bold">🎅 Cześć, <%= user.username %>!</h1>
+        <p class="text-sm text-slate-300">Kalendarz adwentowy</p>
+      </div>
+      <nav class="flex gap-2">
+        <a href="/calendar" id="menu-calendar-link" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded text-sm shadow-sm hidden">Kalendarz</a>
+        <button data-open-user-panel id="menu-open-panel" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded text-sm shadow-sm">Panel Użytkownika</button>
+        <a href="/fill" class="bg-emerald-600 px-3 py-2 rounded text-sm hover:bg-emerald-500 transition">Wypełnij okienka</a>
+        <a href="/logout" class="bg-slate-700 px-3 py-2 rounded text-sm">Wyloguj</a>
+      </nav>
+    </header>
+
+    <section id="calendar-view">
+      <main id="calendar-grid" data-username="<%= user.username %>" class="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        <% for (let day = 1; day <= 24; day++) { const hasEntry = entries.some(e => e.day === day); %>
+          <div class="relative rounded-xl overflow-hidden border border-slate-800/80 aspect-square flex items-center justify-center bg-slate-950/70 backdrop-blur">
+            <img src="/doors/<%= day %>.png" alt="Dzień <%= day %>" class="w-full h-full object-contain pointer-events-none select-none" loading="lazy" />
+            <div class="absolute top-1 left-1 bg-slate-950/80 px-2 py-1 rounded text-sm font-semibold shadow"><%= day %></div>
+            <% if (hasEntry) { %>
+              <a href="/day/<%= day %>" data-day="<%= day %>" class="day-btn absolute inset-x-6 bottom-2 bg-emerald-500/95 px-3 py-1 rounded font-semibold text-center text-sm shadow transition hover:bg-emerald-400">Otwórz 🎁</a>
+            <% } else { %>
+              <div data-day="<%= day %>" class="day-empty absolute inset-x-2 bottom-2 bg-slate-950/60 px-2 py-1 rounded text-xs text-center">Brak wpisu</div>
+            <% } %>
+            <div class="day-lock hidden absolute inset-0 bg-slate-950/85 flex flex-col items-center justify-center text-center px-2">
+              <span class="text-3xl mb-1">🔒</span>
+              <p class="text-xs text-slate-200 leading-tight">To okienko otwieramy<br/>w grudniu</p>
+            </div>
+          </div>
+        <% } %>
+      </main>
+    </section>
+
+    <!-- PANEL -->
+    <section id="user-panel-section" class="hidden rounded-2xl border border-emerald-500/30 bg-slate-900/60 shadow-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-800/60 to-slate-900/70">
+        <h2 id="panel-title" class="font-semibold">Panel Użytkownika</h2>
+      </div>
+      <div class="grid grid-cols-[44px,1fr] sm:grid-cols-[52px,1fr]">
+        <aside class="bg-slate-950/60 border-r border-emerald-500/20 p-1 sm:p-2 flex flex-col gap-1 sm:gap-2">
+          <button aria-label="Zmień hasło" title="Zmień hasło" data-panel="pw" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">🔑</button>
+          <button aria-label="Powiadomienia" title="Powiadomienia" data-panel="notif" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">🔔</button>
+          <button aria-label="Statystyki" title="Statystyki" data-panel="stats" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">📊</button>
+          <button aria-label="Historia zmian" title="Historia zmian" data-panel="history" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">🕒</button>
+          <button aria-label="Pobierz zawartość" title="Pobierz zawartość" data-panel="export" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">⬇️</button>
+          <% if (user.username === 'admin') { %>
+          <button aria-label="Test e-mail" title="Test e-mail" data-panel="email" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-900/70 hover:bg-slate-700/60 text-lg">✉️</button>
+          <% } %>
+        </aside>
+        <section class="p-4 sm:p-6">
+          <div data-view="pw" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Zmień hasło</h3>
+            <form action="/change-password" method="POST" class="space-y-3 max-w-md">
+              <input type="password" name="newPassword" required placeholder="Nowe hasło" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm" />
+              <button class="bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold px-4 py-2 rounded">Zapisz nowe hasło</button>
+            </form>
+          </div>
+          <div data-view="notif" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Powiadomienia</h3>
+            <p class="text-sm text-slate-300 mb-3">Ta opcja zapisuje lokalnie flagę <code>NOTIFICATIONS_ON</code>.</p>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2">
+                <input id="notif-toggle" type="checkbox" class="accent-emerald-500">
+                <span>Włączone</span>
+              </label>
+              <button id="notif-save" class="bg-emerald-700 hover:bg-emerald-600 text-sm px-3 py-1.5 rounded">Zapisz</button>
+            </div>
+            <p id="notif-status" class="text-xs text-slate-400 mt-2"></p>
+          </div>
+          <div data-view="stats" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Statystyki</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl">
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Teksty</div><div id="stat-texts" class="text-2xl font-semibold">0</div></div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Obrazki</div><div id="stat-images" class="text-2xl font-semibold">0</div></div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Linki</div><div id="stat-songs" class="text-2xl font-semibold">0</div></div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Wideo</div><div id="stat-videos" class="text-2xl font-semibold">0</div></div>
+            </div>
+            <p id="stats-context-label" class="text-xs text-slate-400 mt-2"></p>
+          </div>
+          <div data-view="history" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Historia zmian</h3>
+            <p class="text-sm text-slate-300">Historia będzie zbierana po stronie serwera.</p>
+          </div>
+          <div data-view="export" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Pobierz zawartość</h3>
+            <div class="space-y-3 max-w-xl">
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3">
+                <div class="text-sm font-semibold mb-2">Teksty (TXT)</div>
+                <div class="flex gap-2 flex-wrap">
+                  <button id="dl-texts-all" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz cały kalendarz</button>
+                  <button id="dl-texts-open" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz tylko odkryte</button>
+                </div>
+              </div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3">
+                <div class="text-sm font-semibold mb-2">Linki do muzyki (TXT)</div>
+                <div class="flex gap-2 flex-wrap">
+                  <button id="dl-songs-all" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz cały kalendarz</button>
+                  <button id="dl-songs-open" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz tylko odkryte</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% if (user.username === 'admin') { %>
+          <div data-view="email" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Wyślij testowe powiadomienie e-mail</h3>
+            <form id="email-test-form" class="space-y-3 max-w-lg">
+              <div class="flex items-center gap-3">
+                <label class="text-sm">Odbiorca:</label>
+                <select name="username" class="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm">
+                  <option value="stefania">Stefania</option>
+                  <option value="jacek">Jacek</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Wiadomość (opcjonalnie)</label>
+                <textarea name="custom" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="Własny tekst..."></textarea>
+              </div>
+              <button class="bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold px-4 py-2 rounded">Wyślij test</button>
+              <p id="email-status" class="text-xs text-amber-200 mt-2"></p>
+            </form>
+          </div>
+          <% } %>
+        </section>
+      </div>
+    </section>
+
+    <script>
+      window.CURRENT_USER = "<%= user.username %>";
+      window.__ENTRIES_VAR__ = <%- JSON.stringify(entries || []) %>;
+      window.__CONTEXT_LABEL__ = "Wpisy dla Ciebie";
+    </script>
+    <script src="/js/user-panel.js?v=202" defer></script>
+    <script src="/js/calendar-page.js?v=172" defer></script>
+  </body>
+</html>

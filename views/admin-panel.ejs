@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Panel administratora</title>
+  <link rel="stylesheet" href="/css/tailwind.css" />
+</head>
+<body class="min-h-screen bg-slate-900 text-white p-4">
+  <header class="flex items-center justify-between mb-4 gap-2">
+    <div>
+      <h1 class="text-xl font-bold">👑 Cześć, <%= user.username %>!</h1>
+      <p class="text-sm text-slate-300">Panel administratora</p>
+    </div>
+    <nav class="flex gap-2">
+      <a href="/calendar" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded text-sm shadow-sm">Kalendarz</a>
+      <a href="/fill" class="bg-emerald-600 px-3 py-2 rounded text-sm hover:bg-emerald-500">Wypełnij okienka</a>
+      <a href="/logout" class="bg-slate-700 px-3 py-2 rounded text-sm">Wyloguj</a>
+    </nav>
+  </header>
+
+  <main class="max-w-4xl mx-auto space-y-6">
+    <section class="rounded-xl border border-emerald-500/30 bg-slate-900/60 p-4 shadow">
+      <h2 class="font-semibold mb-3">Użytkownicy</h2>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <% users.forEach(u => { %>
+          <div class="rounded-lg border border-slate-700/60 bg-slate-950/60 p-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-emerald-700 grid place-items-center">👤</div>
+              <div>
+                <div class="font-semibold"><%= u.username %></div>
+                <div class="text-xs text-slate-400">kliknij akcję poniżej</div>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <a href="/calendar?user=<%= u.username %>" class="text-xs px-3 py-1 rounded bg-slate-800 hover:bg-slate-700">Kalendarz</a>
+              <a href="/fill?user=<%= u.username %>" class="text-xs px-3 py-1 rounded bg-slate-800 hover:bg-slate-700">Wpisy</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+      <div class="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-900/10 p-3">
+        <h3 class="font-semibold mb-2">✉️ Szybki test e‑mail</h3>
+        <form id="email-test-form" class="flex flex-wrap items-center gap-2">
+          <select name="username" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm">
+            <option value="stefania">Stefania</option>
+            <option value="jacek">Jacek</option>
+          </select>
+          <input name="custom" placeholder="Własny tekst (opcjonalnie)" class="flex-1 min-w-[220px] bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm">
+          <button class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Wyślij</button>
+          <span id="email-status" class="text-xs text-amber-200 ml-2"></span>
+        </form>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-rose-500/30 bg-slate-900/60 p-4 shadow">
+      <h2 class="font-semibold mb-3">🗑 Kasowanie wpisów</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="rounded-lg border border-slate-700/60 bg-slate-950/60 p-3">
+          <h3 class="font-semibold mb-2 text-sm">Usuń wpis dla konkretnego dnia</h3>
+          <form id="del-day-form" class="flex items-center flex-wrap gap-2">
+            <select name="username" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm">
+              <option value="stefania">Stefania</option>
+              <option value="jacek">Jacek</option>
+            </select>
+            <select name="day" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm">
+              <% for (let d=1; d<=24; d++) { %><option value="<%= d %>"><%= d %></option><% } %>
+            </select>
+            <button class="bg-rose-600 hover:bg-rose-500 text-xs px-3 py-1.5 rounded">Usuń dzień</button>
+            <span id="del-day-status" class="text-xs text-amber-200 ml-2"></span>
+          </form>
+        </div>
+        <div class="rounded-lg border border-slate-700/60 bg-slate-950/60 p-3">
+          <h3 class="font-semibold mb-2 text-sm">Usuń wszystkie wpisy użytkownika</h3>
+          <form id="del-all-form" class="flex items-center flex-wrap gap-2">
+            <select name="username" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm">
+              <option value="stefania">Stefania</option>
+              <option value="jacek">Jacek</option>
+            </select>
+            <button class="bg-rose-700 hover:bg-rose-600 text-xs px-3 py-1.5 rounded">Usuń wszystko</button>
+            <span id="del-all-status" class="text-xs text-amber-200 ml-2"></span>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/admin-panel.js?v=205" defer></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Admin • E-mail test</title>
+  <link rel="stylesheet" href="/css/tailwind.css" />
+</head>
+<body class="min-h-screen bg-slate-900 text-white p-4">
+  <header class="flex items-center justify-between mb-6">
+    <div><h1 class="text-xl font-bold">Admin • E-mail</h1></div>
+    <nav class="flex gap-2">
+      <a href="/calendar" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded text-sm shadow-sm">Kalendarz</a>
+      <a href="/fill" class="bg-emerald-600 px-3 py-2 rounded text-sm hover:bg-emerald-500">Wypełnij okienka</a>
+      <a href="/logout" class="bg-slate-700 px-3 py-2 rounded text-sm">Wyloguj</a>
+    </nav>
+  </header>
+
+  <main class="max-w-xl mx-auto rounded-xl border border-emerald-500/30 bg-slate-900/60 p-5 shadow-lg">
+    <h2 class="font-semibold mb-4">Wyślij testowe powiadomienie e-mail (AWS SES)</h2>
+    <p class="text-xs text-slate-300 mb-4">Upewnij się, że <code>EMAIL_FROM</code> i adresy odbiorców są zweryfikowane w SES (w trybie sandbox).</p>
+    <form method="POST" action="/admin/email" class="space-y-4">
+      <div>
+        <label class="block text-sm mb-1">Odbiorca</label>
+        <select name="username" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2">
+          <option value="stefania">Stefania</option>
+          <option value="jacek">Jacek</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Wiadomość (opcjonalnie)</label>
+        <textarea name="custom" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="Własny tekst wiadomości... Jeśli puste, wyślemy domyślny komunikat z personalizacją."></textarea>
+      </div>
+      <button class="w-full bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded font-semibold">Wyślij</button>
+    </form>
+    <% if (msg) { %>
+      <p class="mt-4 text-sm text-amber-200"><%= msg %></p>
+    <% } %>
+  </main>
+</body>
+</html>

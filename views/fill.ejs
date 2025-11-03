@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Wypełnij okienka</title>
+    <link rel="stylesheet" href="/css/tailwind.css" />
+    <style>
+      .delete-btn-fix{position:absolute!important;top:.75rem!important;right:.75rem!important;z-index:20!important}
+      #day-select{background-color:#020617!important;color:#fff!important;border:1px solid rgba(45,212,191,.6)!important}
+      #day-select option{background-color:#020617;color:#fff}
+    </style>
+  </head>
+  <body class="min-h-screen text-white p-4"
+        style="background: radial-gradient(circle at 10% 10%, rgba(10,120,80,0.35), rgba(2,6,23,1) 50%), linear-gradient(180deg, #063322 0%, #020617 60%, #0f172a 100%);">
+    <header class="flex items-center justify-between mb-4 gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 via-emerald-600 to-green-800 flex items-center justify-center shadow-lg ring-2 ring-amber-300/70">🎄</div>
+        <div><h1 class="text-lg sm:text-xl font-bold">Wypełnij okienka</h1></div>
+      </div>
+      <nav class="flex gap-2">
+        <a href="/calendar" id="menu-calendar-link" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded text-sm shadow-sm">Kalendarz</a>
+        <button data-open-user-panel id="menu-open-panel" class="bg-emerald-900/70 hover:bg-emerald-800 px-3 py-2 rounded text-sm shadow-sm">Panel Użytkownika</button>
+        <a href="/logout" class="bg-slate-900/80 hover:bg-slate-800 px-3 py-2 rounded text-sm shadow-sm">Wyloguj</a>
+      </nav>
+    </header>
+
+    <section id="fill-view">
+      <main class="max-w-4xl mx-auto space-y-4">
+        <div class="rounded-xl border border-emerald-500/40 bg-slate-900/40 p-4 sm:p-5 shadow-lg backdrop-blur"
+            style="background: radial-gradient(circle at 90% 10%, rgba(250,204,21,0.15), rgba(15,23,42,0)), rgba(15,23,42,0.45);">
+          <label class="block mb-1 text-sm text-emerald-50">Dzień (1–24)</label>
+          <div class="flex flex-wrap items-center gap-3">
+            <select name="day" id="day-select" class="rounded px-3 py-2 text-sm w-28">
+              <% for (let d = 1; d <= 24; d++) { %><option value="<%= d %>"><%= d %></option><% } %>
+            </select>
+            <p id="day-info" class="text-xs text-amber-100/80 flex-1 min-w-[210px]">Wybierz dzień, który chcesz przygotować 🎁</p>
+          </div>
+        </div>
+
+        <form action="/fill" method="POST" enctype="multipart/form-data" class="space-y-4">
+          <input type="hidden" name="day" id="hidden-day" value="1" />
+
+          <div class="relative rounded-xl border border-emerald-500/30 bg-slate-950/40 p-4 sm:p-5 shadow-md overflow-hidden">
+            <button type="button" data-delete="text" class="delete-btn-fix bg-red-500/90 hover:bg-red-500 text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">🗑 <span class="hidden sm:inline">Usuń</span></button>
+            <label class="block mb-2 font-semibold text-emerald-50 text-sm sm:text-base">Kilka miłych słów na ten dzień...</label>
+            <textarea name="text" id="text-day" rows="3" class="w-full bg-slate-900/70 border border-emerald-900/40 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200"></textarea>
+          </div>
+
+          <div class="relative rounded-xl border border-emerald-500/30 bg-slate-950/40 p-4 sm:p-5 shadow-md">
+            <button type="button" data-delete="image" class="delete-btn-fix bg-red-500/90 hover:bg-red-500 text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">🗑 <span class="hidden sm:inline">Usuń</span></button>
+            <label class="block mb-2 font-semibold text-emerald-50 text-sm sm:text-base">Coś do ucieszy oczy...</label>
+            <input type="file" name="image" accept="image/*" class="block w-full text-sm text-emerald-50 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-300 file:text-slate-950 hover:file:bg-amber-200" />
+            <div id="preview-image" class="mt-3 hidden">
+              <p class="text-xs text-emerald-50 mb-1">Zapisany obrazek:</p>
+              <img id="preview-image-tag" src="" class="max-h-44 rounded border border-emerald-500/40 shadow" />
+            </div>
+          </div>
+
+          <div class="relative rounded-xl border border-emerald-500/30 bg-slate-950/40 p-4 sm:p-5 shadow-md">
+            <button type="button" data-delete="song" class="delete-btn-fix bg-red-500/90 hover:bg-red-500 text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">🗑 <span class="hidden sm:inline">Usuń</span></button>
+            <label class="block mb-2 font-semibold text-emerald-50 text-sm sm:text-base">Coś co ucieszy ucho... (link Spotify)</label>
+            <input type="url" name="song" id="song-day" placeholder="https://open.spotify.com/track/..." class="w-full bg-slate-900/70 border border-emerald-900/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-200" />
+            <div id="preview-song" class="mt-2 hidden text-xs text-emerald-50">Zapisany link: <a id="preview-song-link" href="#" target="_blank" class="text-amber-200 underline">otwórz</a></div>
+          </div>
+
+          <div class="relative rounded-xl border border-emerald-500/30 bg-slate-950/40 p-4 sm:p-5 shadow-md">
+            <button type="button" data-delete="video" class="delete-btn-fix bg-red-500/90 hover:bg-red-500 text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">🗑 <span class="hidden sm:inline">Usuń</span></button>
+            <label class="block mb-2 font-semibold text-emerald-50 text-sm sm:text-base">I jeszcze coś dla oczu i uszu (filmik)...</label>
+            <input type="file" name="video" accept="video/*" class="block w-full text-sm text-emerald-50 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400" />
+            <div id="preview-video" class="mt-3 hidden">
+              <p class="text-xs text-emerald-50 mb-1">Zapisany filmik:</p>
+              <video id="preview-video-tag" src="" controls class="w-full max-h-56 rounded border border-emerald-500/40 shadow-md"></video>
+            </div>
+          </div>
+
+          <button class="w-full bg-gradient-to-r from-amber-300 via-emerald-300 to-emerald-500 text-slate-950 font-semibold py-2.5 rounded-lg shadow-xl text-sm tracking-wide">
+            Zapisz i niech dzieje się magia ✨
+          </button>
+        </form>
+      </main>
+    </section>
+
+    <!-- PANEL -->
+    <section id="user-panel-section" class="hidden rounded-2xl border border-emerald-500/30 bg-slate-900/60 shadow-2xl overflow-hidden mt-6">
+      <div class="px-4 py-3 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-800/60 to-slate-900/70">
+        <h2 id="panel-title" class="font-semibold">Panel Użytkownika</h2>
+      </div>
+      <div class="grid grid-cols-[44px,1fr] sm:grid-cols-[52px,1fr]">
+        <aside class="bg-slate-950/60 border-r border-emerald-500/20 p-1 sm:p-2 flex flex-col gap-1 sm:gap-2">
+          <button aria-label="Zmień hasło" title="Zmień hasło" data-panel="pw" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">🔑</button>
+          <button aria-label="Powiadomienia" title="Powiadomienia" data-panel="notif" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">🔔</button>
+          <button aria-label="Statystyki" title="Statystyki" data-panel="stats" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">📊</button>
+          <button aria-label="Historia zmian" title="Historia zmian" data-panel="history" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">🕒</button>
+          <button aria-label="Pobierz zawartość" title="Pobierz zawartość" data-panel="export" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-800/60 hover:bg-slate-700/60 text-lg">⬇️</button>
+          <% if (user.username === 'admin') { %>
+          <button aria-label="Test e-mail" title="Test e-mail" data-panel="email" class="panel-tab w-full h-10 sm:h-12 grid place-items-center rounded-md bg-slate-900/70 hover:bg-slate-700/60 text-lg">✉️</button>
+          <% } %>
+        </aside>
+        <section class="p-4 sm:p-6">
+          <div data-view="pw" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Zmień hasło</h3>
+            <form action="/change-password" method="POST" class="space-y-3 max-w-md">
+              <input type="password" name="newPassword" required placeholder="Nowe hasło" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm" />
+              <button class="bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold px-4 py-2 rounded">Zapisz nowe hasło</button>
+            </form>
+          </div>
+          <div data-view="notif" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Powiadomienia</h3>
+            <p class="text-sm text-slate-300 mb-3">Ta opcja zapisuje lokalnie flagę <code>NOTIFICATIONS_ON</code>.</p>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2">
+                <input id="notif-toggle" type="checkbox" class="accent-emerald-500">
+                <span>Włączone</span>
+              </label>
+              <button id="notif-save" class="bg-emerald-700 hover:bg-emerald-600 text-sm px-3 py-1.5 rounded">Zapisz</button>
+            </div>
+            <p id="notif-status" class="text-xs text-slate-400 mt-2"></p>
+          </div>
+          <div data-view="stats" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Statystyki</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl">
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Teksty</div><div id="stat-texts" class="text-2xl font-semibold">0</div></div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Obrazki</div><div id="stat-images" class="text-2xl font-semibold">0</div></div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Linki</div><div id="stat-songs" class="text-2xl font-semibold">0</div></div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3"><div class="text-xs text-slate-400">Wideo</div><div id="stat-videos" class="text-2xl font-semibold">0</div></div>
+            </div>
+            <p id="stats-context-label" class="text-xs text-slate-400 mt-2"></p>
+          </div>
+          <div data-view="history" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Historia zmian</h3>
+            <p class="text-sm text-slate-300">Historia będzie zbierana po stronie serwera.</p>
+          </div>
+          <div data-view="export" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Pobierz zawartość</h3>
+            <div class="space-y-3 max-w-xl">
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3">
+                <div class="text-sm font-semibold mb-2">Teksty (TXT)</div>
+                <div class="flex gap-2 flex-wrap">
+                  <button id="dl-texts-all" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz cały kalendarz</button>
+                  <button id="dl-texts-open" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz tylko odkryte</button>
+                </div>
+              </div>
+              <div class="rounded-lg border border-emerald-500/30 bg-slate-950/50 p-3">
+                <div class="text-sm font-semibold mb-2">Linki do muzyki (TXT)</div>
+                <div class="flex gap-2 flex-wrap">
+                  <button id="dl-songs-all" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz cały kalendarz</button>
+                  <button id="dl-songs-open" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded">Pobierz tylko odkryte</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% if (user.username === 'admin') { %>
+          <div data-view="email" class="panel-view hidden">
+            <h3 class="font-semibold mb-3">Wyślij testowe powiadomienie e-mail</h3>
+            <form id="email-test-form" class="space-y-3 max-w-lg">
+              <div class="flex items-center gap-3">
+                <label class="text-sm">Odbiorca:</label>
+                <select name="username" class="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm">
+                  <option value="stefania">Stefania</option>
+                  <option value="jacek">Jacek</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Wiadomość (opcjonalnie)</label>
+                <textarea name="custom" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="Własny tekst..."></textarea>
+              </div>
+              <button class="bg-emerald-700 hover:bg-emerald-600 text-sm font-semibold px-4 py-2 rounded">Wyślij test</button>
+              <p id="email-status" class="text-xs text-amber-200 mt-2"></p>
+            </form>
+          </div>
+          <% } %>
+        </section>
+      </div>
+    </section>
+
+    <script>
+      window.CURRENT_USER = "<%= user.username %>";
+      window.__ENTRIES_VAR__ = <%- JSON.stringify(entries || []) %>;
+      window.__CONTEXT_LABEL__ = "Twoje wpisy";
+    </script>
+    <script src="/js/user-panel.js?v=202" defer></script>
+    <script src="/js/fill-page.js?v=172" defer></script>
+  </body>
+</html>

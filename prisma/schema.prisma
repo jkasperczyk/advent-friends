@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  username  String  @unique
+  password  String
+  role      String
+  entries   Entry[]
+}
+
+model Entry {
+  id        Int      @id @default(autoincrement())
+  day       Int
+  text      String?
+  imageUrl  String?
+  songLink  String?
+  videoUrl  String?
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+
+  @@unique([authorId, day], name: "authorId_day")
+}

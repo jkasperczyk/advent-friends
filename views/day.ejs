@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dzień <%= day %></title>
+    <link rel="stylesheet" href="/css/tailwind.css" />
+  </head>
+  <body class="min-h-screen bg-slate-900 text-white p-4 relative">
+    <header class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-lg font-bold">🎁 Dzień <%= day %></h1>
+      </div>
+      <div class="flex gap-2">
+        <a href="/calendar" class="bg-slate-700 px-3 py-2 rounded text-sm">Kalendarz</a>
+        <a href="/logout" class="bg-slate-700 px-3 py-2 rounded text-sm">Wyloguj</a>
+      </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto relative">
+      <% if (!entry) { %>
+        <p class="text-slate-200 mb-4">Brak wpisu na ten dzień.</p>
+      <% } else { %>
+        <% if (entry.text) { %>
+          <div class="mb-4 bg-slate-950/50 rounded-xl p-4 border border-emerald-500/20">
+            <h2 class="font-semibold mb-2 text-emerald-100">Kilka miłych słów...</h2>
+            <p class="whitespace-pre-line"><%= entry.text %></p>
+          </div>
+        <% } %>
+        <% if (entry.imageUrl) { %>
+          <div class="mb-4">
+            <img src="<%= entry.imageUrl %>" alt="Obrazek dnia" class="rounded-lg border border-slate-700 shadow" />
+          </div>
+        <% } %>
+        <% if (entry.songLink) { %>
+          <div class="mb-4 bg-slate-950/50 rounded-xl p-4 border border-emerald-500/20">
+            <h2 class="font-semibold mb-2 text-emerald-100">Coś do posłuchania</h2>
+            <a href="<%= entry.songLink %>" target="_blank" class="text-emerald-300 underline break-all">Otwórz w Spotify</a>
+          </div>
+        <% } %>
+        <% if (entry.videoUrl) { %>
+          <div class="mb-4">
+            <video src="<%= entry.videoUrl %>" controls class="w-full rounded-lg border border-slate-700"></video>
+          </div>
+        <% } %>
+      <% } %>
+
+      <div id="too-early" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur flex flex-col items-center justify-center text-center rounded-xl">
+        <span class="text-5xl mb-4">🔒</span>
+        <p class="text-lg font-semibold mb-2">Jeszcze nie dziś!</p>
+        <p class="text-sm text-slate-200 mb-4">To okienko otworzy się od 1 grudnia albo w dzień z numerem <%= day %>.</p>
+        <a href="/calendar" class="bg-emerald-500 px-4 py-2 rounded text-slate-950 font-semibold">Wróć do kalendarza</a>
+      </div>
+    </main>
+
+    <script>
+      const username = "<%= user.username %>";
+      const day = <%= day %>;
+      const isJacek = username === "jacek";
+      const now = new Date();
+      const inDecember = now.getMonth() === 11;
+      const todaysDay = inDecember ? now.getDate() : 0;
+
+      if (!isJacek) {
+        if (!inDecember || day > todaysDay) {
+          document.getElementById("too-early").classList.remove("hidden");
+        }
+      }
+    </script>
+  </body>
+</html>

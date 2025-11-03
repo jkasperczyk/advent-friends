@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel administratora</title>
+    <link rel="stylesheet" href="/css/tailwind.css" />
+  </head>
+  <body class="min-h-screen bg-slate-900 text-white p-4">
+    <header class="flex items-center justify-between mb-4 gap-2">
+      <h1 class="text-xl font-bold">🛠 Panel administratora</h1>
+      <div class="flex gap-2">
+        <a href="/change-password" class="bg-slate-700 px-3 py-2 rounded text-sm">Zmiana hasła</a>
+        <a href="/logout" class="bg-slate-700 px-3 py-2 rounded text-sm">Wyloguj</a>
+      </div>
+    </header>
+    <section class="mb-6">
+      <h2 class="text-lg mb-2">Użytkownicy</h2>
+      <ul class="space-y-1">
+        <% users.forEach(u => { %>
+          <li class="bg-slate-800 px-3 py-2 rounded flex justify-between items-center">
+            <span><%= u.username %> (<%= u.role %>)</span>
+          </li>
+        <% }) %>
+      </ul>
+    </section>
+    <section>
+      <h2 class="text-lg mb-2">Wpisy</h2>
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr>
+            <th class="p-2">User</th>
+            <th class="p-2">Dzień</th>
+            <th class="p-2">Akcje</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% entries.forEach(e => { %>
+            <tr class="odd:bg-slate-800">
+              <td class="p-2"><%= e.author.username %></td>
+              <td class="p-2"><%= e.day %></td>
+              <td class="p-2">
+                <form action="/admin/reset-entry" method="POST" class="inline">
+                  <input type="hidden" name="userId" value="<%= e.authorId %>" />
+                  <input type="hidden" name="day" value="<%= e.day %>" />
+                  <button class="bg-red-500 px-3 py-1 rounded text-sm">Usuń</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </section>
+  </body>
+</html>

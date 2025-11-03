@@ -1,0 +1,205 @@
+const express = require("express");
+const session = require("express-session");
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const { PrismaClient } = require("@prisma/client");
+
+const app = express();
+const prisma = new PrismaClient();
+
+const UPLOAD_DIR = path.join(__dirname, "public", "uploads");
+const BACKUP_DIR = path.join(__dirname, "backups");
+
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: function (req, file, cb) {
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, unique + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage });
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use("/public", express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "super-secret-xmas",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+function ensureAuth(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect("/login");
+  }
+  next();
+}
+
+function isAdmin(user) {
+  return user && user.role === "admin";
+}
+
+async function doBackup() {
+  try {
+    const allUsers = await prisma.user.findMany();
+    const allEntries = await prisma.entry.findMany();
+    const payload = {
+      createdAt: new Date().toISOString(),
+      users: allUsers,
+      entries: allEntries,
+    };
+    const filename = path.join(
+      BACKUP_DIR,
+      "backup-" + Date.now().toString() + ".json"
+    );
+    fs.writeFileSync(filename, JSON.stringify(payload, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Backup failed:", err.message);
+  }
+}
+
+app.get("/", async (req, res) => {
+  if (!req.session.user) {
+    return res.redirect("/login");
+  }
+  if (req.session.user.role === "admin") {
+    return res.redirect("/admin");
+  }
+  return res.redirect("/calendar");
+});
+
+app.get("/login", (req, res) => {
+  res.render("login", { error: null });
+});
+
+app.post("/login", async (req, res) => {
+  const bcrypt = require("bcrypt");
+  const { username, password } = req.body;
+  const user = await prisma.user.findUnique({ where: { username } });
+  if (!user) {
+    return res.render("login", { error: "Nieprawidłowy login lub hasło" });
+  }
+  const ok = await bcrypt.compare(password, user.password);
+  if (!ok) {
+    return res.render("login", { error: "Nieprawidłowy login lub hasło" });
+  }
+  req.session.user = { id: user.id, username: user.username, role: user.role };
+  if (user.role === "admin") {
+    return res.redirect("/admin");
+  }
+  return res.redirect("/calendar");
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login");
+  });
+});
+
+app.get("/calendar", ensureAuth, async (req, res) => {
+  const user = req.session.user;
+  const otherUser = await prisma.user.findFirst({
+    where: {
+      NOT: { id: user.id },
+      role: { not: "admin" },
+    },
+  });
+  let entries = [];
+  if (otherUser) {
+    entries = await prisma.entry.findMany({
+      where: { authorId: otherUser.id },
+    });
+  }
+  res.render("calendar", {
+    user,
+    entries,
+    today: new Date().getDate(),
+  });
+});
+
+app.get("/fill", ensureAuth, async (req, res) => {
+  const user = req.session.user;
+  if (user.role === "admin") return res.redirect("/admin");
+  res.render("fill", { user, entry: null });
+});
+
+app.post(
+  "/fill",
+  ensureAuth,
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const user = req.session.user;
+    const day = parseInt(req.body.day, 10);
+    const text = req.body.text || null;
+    const song = req.body.song || null;
+    const image = req.files["image"] ? req.files["image"][0].filename : null;
+    const video = req.files["video"] ? req.files["video"][0].filename : null;
+
+    const data = {
+      day,
+      text,
+      songLink: song,
+      authorId: user.id,
+    };
+    if (image) data.imageUrl = "/public/uploads/" + image;
+    if (video) data.videoUrl = "/public/uploads/" + video;
+
+    await prisma.entry.upsert({
+      where: {
+        authorId_day: {
+          authorId: user.id,
+          day,
+        },
+      },
+      update: data,
+      create: data,
+    });
+
+    await doBackup();
+
+    res.redirect("/calendar");
+  }
+);
+
+app.get("/admin", ensureAuth, async (req, res) => {
+  const user = req.session.user;
+  if (!isAdmin(user)) return res.redirect("/calendar");
+  const users = await prisma.user.findMany();
+  const entries = await prisma.entry.findMany({ include: { author: true } });
+  res.render("admin", { user, users, entries });
+});
+
+app.post("/admin/reset-entry", ensureAuth, async (req, res) => {
+  const user = req.session.user;
+  if (!isAdmin(user)) return res.redirect("/calendar");
+  const { userId, day } = req.body;
+  await prisma.entry.deleteMany({
+    where: {
+      authorId: parseInt(userId, 10),
+      day: parseInt(day, 10),
+    },
+  });
+  await doBackup();
+  res.redirect("/admin");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("🎄 Wyzwanie Świąteczne 2025 działa na porcie", PORT);
+});
